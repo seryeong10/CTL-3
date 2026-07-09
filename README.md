@@ -70,7 +70,3 @@
 - 지역 상권 활성화
 - 세대 간 디지털 격차 완화
 
-
-
-와이어프레임
-https://www.figma.com/make/4YRUK4nsK9zgqnV5Rt1iYz/Senior-Digital-Practice-App?t=bUvRZi7eVsrKkv2u-1
