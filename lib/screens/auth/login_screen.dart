@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/common_widgets.dart';
+import '../../services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -95,7 +96,29 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 14),
                     PrimaryButton(
                       text: '로그인',
-                      onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
+                      onPressed: () async {
+                        if (id.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('아이디(전화번호)를 입력해 주세요.')),
+                          );
+                          return;
+                        }
+
+                        // 가입한 전화번호(id 필드)로 DB 조회 시도
+                        final user = await ApiService.loginWithPhone(id);
+
+                        if (user != null) {
+                          if (mounted) {
+                            Navigator.pushReplacementNamed(context, '/home');
+                          }
+                        } else {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('등록되지 않은 회원 정보입니다. 가입 시 입력한 전화번호를 정확히 적어주세요.')),
+                            );
+                          }
+                        }
+                      },
                     ),
                     const SizedBox(height: 14),
                     PrimaryButton(
@@ -124,7 +147,29 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 14),
                     PrimaryButton(
                       text: '관리자 로그인',
-                      onPressed: () => Navigator.pushReplacementNamed(context, '/admin_home'),
+                      onPressed: () async {
+                        if (id.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('관리자 아이디(전화번호)를 입력해 주세요.')),
+                          );
+                          return;
+                        }
+
+                        // 가입한 전화번호로 DB 조회 시도
+                        final user = await ApiService.loginWithPhone(id);
+
+                        if (user != null && (user['user_type'] == 'admin' || user['user_type'] == 'merchant')) {
+                          if (mounted) {
+                            Navigator.pushReplacementNamed(context, '/admin_home');
+                          }
+                        } else {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('관리자 또는 점주 계정이 아니거나 등록되지 않은 회원입니다.')),
+                            );
+                          }
+                        }
+                      },
                     ),
                     const SizedBox(height: 4),
                     const Text(

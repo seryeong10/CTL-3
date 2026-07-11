@@ -3,6 +3,7 @@ import '../../core/theme.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/common_widgets.dart';
+import '../../services/api_service.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -47,6 +48,59 @@ class _SignupScreenState extends State<SignupScreen> {
               final ph = f[2] as String;
               final isPassword = f[3] as bool;
 
+              Widget inputWidget;
+              if (key == 'dob') {
+                inputWidget = GestureDetector(
+                  onTap: () async {
+                    final DateTime? picked = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime(1960, 1, 1),
+                      firstDate: DateTime(1900),
+                      lastDate: DateTime.now(),
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        formData['dob'] = "${picked.year}.${picked.month.toString().padLeft(2, '0')}.${picked.day.toString().padLeft(2, '0')}";
+                      });
+                    }
+                  },
+                  child: Container(
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: AppColors.card,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          formData['dob']?.isNotEmpty == true
+                              ? formData['dob']!
+                              : ph,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: formData['dob']?.isNotEmpty == true
+                                ? AppColors.textMain
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                        const Icon(Icons.calendar_month, color: AppColors.textSecondary),
+                      ],
+                    ),
+                  ),
+                );
+              } else {
+                inputWidget = TextInputField(
+                  placeholder: ph,
+                  value: formData[key] ?? '',
+                  onChange: (v) => setState(() => formData[key] = v),
+                  isPassword: isPassword,
+                );
+              }
+
               return Padding(
                 padding: const EdgeInsets.only(bottom: 18),
                 child: Column(
@@ -61,12 +115,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    TextInputField(
-                      placeholder: ph,
-                      value: formData[key] ?? '',
-                      onChange: (v) => setState(() => formData[key] = v),
-                      isPassword: isPassword,
-                    ),
+                    inputWidget,
                   ],
                 ),
               );
@@ -74,7 +123,47 @@ class _SignupScreenState extends State<SignupScreen> {
             const SizedBox(height: 8),
             PrimaryButton(
               text: '회원가입 신청',
-              onPressed: () => Navigator.pushReplacementNamed(context, '/signup_complete'),
+              onPressed: () async {
+                final name = formData['name'] ?? '';
+                final dob = formData['dob'] ?? '';
+                final phone = formData['phone'] ?? '';
+
+                if (name.isEmpty || phone.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('이름과 전화번호는 필수 입력 항목입니다.')),
+                  );
+                  return;
+                }
+
+                // 생년월일에서 숫자만 추출하여 출생년도 4자리 파싱 (예: 2002.06.11 또는 20020611 -> 2002)
+                int birthYear = 1960;
+                if (dob.isNotEmpty) {
+                  final digitsOnly = dob.replaceAll(RegExp(r'\D'), '');
+                  if (digitsOnly.length >= 4) {
+                    birthYear = int.tryParse(digitsOnly.substring(0, 4)) ?? 1960;
+                  }
+                }
+
+                // 백엔드 회원가입 호출
+                final result = await ApiService.signUp(
+                  name: name,
+                  phone: phone,
+                  birthYear: birthYear,
+                  userType: 'senior', // 기본값으로 senior 지정
+                );
+
+                if (result != null) {
+                  if (mounted) {
+                    Navigator.pushReplacementNamed(context, '/signup_complete');
+                  }
+                } else {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('회원가입 신청에 실패했습니다. 다시 시도해 주세요.')),
+                    );
+                  }
+                }
+              },
             ),
           ],
         ),
