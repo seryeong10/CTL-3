@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
+import '../../core/font_size_controller.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/overlay_widgets.dart';
@@ -12,7 +13,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String fontSize = '보통';
+  final _fontCtrl = FontSizeController();
   bool notif = true;
 
   void showWithdraw() {
@@ -63,7 +64,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: CustomAppBar(title: '설정', onBack: () => Navigator.pop(context)),
+      appBar: CustomAppBar(title: '설정'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -78,14 +79,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Row(
                     children: ['작게', '보통', '크게'].map((s) => Expanded(
                       child: GestureDetector(
-                        onTap: () => setState(() => fontSize = s),
+                        onTap: () {
+                          _fontCtrl.setFontSize(s);
+                          setState(() {});
+                        },
                         child: Container(
                           height: 50,
                           margin: const EdgeInsets.only(right: 8),
                           decoration: BoxDecoration(
-                            color: fontSize == s ? AppColors.primary.withValues(alpha: 0.1) : Colors.white,
+                            color: _fontCtrl.fontSize == s ? AppColors.primary.withValues(alpha: 0.1) : Colors.white,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: fontSize == s ? AppColors.primary : AppColors.border, width: 2),
+                            border: Border.all(color: _fontCtrl.fontSize == s ? AppColors.primary : AppColors.border, width: 2),
                           ),
                           alignment: Alignment.center,
                           child: Text(
@@ -93,7 +97,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             style: TextStyle(
                               fontSize: s == '작게' ? 13 : s == '보통' ? 16 : 20,
                               fontWeight: FontWeight.w700,
-                              color: fontSize == s ? AppColors.primary : AppColors.textMain,
+                              color: _fontCtrl.fontSize == s ? AppColors.primary : AppColors.textMain,
                             ),
                           ),
                         ),

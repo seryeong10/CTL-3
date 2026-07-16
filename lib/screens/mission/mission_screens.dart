@@ -16,16 +16,7 @@ class MissionCategoriesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: CustomAppBar(
-        title: '연습하기',
-        onBack: () {
-          if (Navigator.canPop(context)) {
-            Navigator.pop(context);
-          } else {
-            Navigator.pushReplacementNamed(context, '/home');
-          }
-        },
-      ),
+      appBar: CustomAppBar(title: '연습하기'),
       body: ListView.separated(
         padding: const EdgeInsets.all(20),
         itemCount: categories.length,
@@ -105,16 +96,7 @@ class MissionListScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: CustomAppBar(
-        title: title,
-        onBack: () {
-          if (Navigator.canPop(context)) {
-            Navigator.pop(context);
-          } else {
-            Navigator.pushReplacementNamed(context, '/mission_categories');
-          }
-        },
-      ),
+      appBar: CustomAppBar(title: title),
       body: ListView.separated(
         padding: const EdgeInsets.all(20),
         itemCount: items.length,

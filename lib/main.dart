@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'core/theme.dart';
+import 'core/font_size_controller.dart';
 
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
@@ -29,8 +30,21 @@ void main() {
   runApp(const SeniorApp());
 }
 
-class SeniorApp extends StatelessWidget {
+class SeniorApp extends StatefulWidget {
   const SeniorApp({super.key});
+
+  @override
+  State<SeniorApp> createState() => _SeniorAppState();
+}
+
+class _SeniorAppState extends State<SeniorApp> {
+  final _fontCtrl = FontSizeController();
+
+  @override
+  void initState() {
+    super.initState();
+    _fontCtrl.addListener(() => setState(() {}));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,13 +54,21 @@ class SeniorApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: AppColors.primary,
         scaffoldBackgroundColor: AppColors.background,
-        fontFamily: 'Pretendard', // Use Pretendard or system default
+        fontFamily: 'Pretendard',
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white,
           foregroundColor: AppColors.textMain,
           elevation: 0,
         ),
       ),
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(_fontCtrl.scaleFactor),
+          ),
+          child: child!,
+        );
+      },
       initialRoute: '/login',
       routes: {
         '/login': (context) => const LoginScreen(),

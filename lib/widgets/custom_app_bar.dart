@@ -3,15 +3,27 @@ import '../core/theme.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
-  final VoidCallback onBack;
+  final VoidCallback? onBack; // nullable - 미제공 시 자동 처리
   final Widget? rightWidget;
 
   const CustomAppBar({
     super.key,
     required this.title,
-    required this.onBack,
+    this.onBack,
     this.rightWidget,
   });
+
+  void _handleBack(BuildContext context) async {
+    if (onBack != null) {
+      onBack!();
+    } else {
+      // maybePop: pop이 불가능하면 false 반환 (assertion 오류 없음)
+      final didPop = await Navigator.maybePop(context);
+      if (!didPop && context.mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +38,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         child: Row(
           children: [
             GestureDetector(
-              onTap: onBack,
+              onTap: () => _handleBack(context),
               behavior: HitTestBehavior.opaque,
               child: const Padding(
                 padding: EdgeInsets.all(4.0),
@@ -44,7 +56,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ),
             ),
-            ?rightWidget,
+            if (rightWidget != null) rightWidget!,
           ],
         ),
       ),
