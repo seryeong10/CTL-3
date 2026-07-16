@@ -195,52 +195,117 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 24),
                     
-                    // Today's mission
-                    const Text(
-                      '오늘의 추천 미션',
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textMain,
-                      ),
+                    // Today's missions
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          '오늘의 추천 미션',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textMain,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            '0 / 3 완료',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 12),
-                    CustomCard(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        {
+                          'title': '음식점\n키오스크',
+                          'sub': '시뮬레이션',
+                          'level': '보통',
+                          'icon': '🍔',
+                          'route': '/restaurant_kiosk',
+                          'point': '+20P',
+                        },
+                        {
+                          'title': '카페\n키오스크',
+                          'sub': '시뮬레이션',
+                          'level': '쉬움',
+                          'icon': '☕',
+                          'route': '/cafe_kiosk',
+                          'point': '+10P',
+                        },
+                        {
+                          'title': '배달 음식\n주문',
+                          'sub': '앱 주문 실습',
+                          'level': '어려움',
+                          'icon': '🛵',
+                          'route': '/food_delivery',
+                          'point': '+30P',
+                        },
+                      ].asMap().entries.map((entry) {
+                        final idx = entry.key;
+                        final m = entry.value;
+                        return Expanded(
+                          child: Stack(
                             children: [
-                              Row(
-                                children: const [
-                                  Text(
-                                    '음식점 키오스크',
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textMain),
-                                  ),
-                                  SizedBox(width: 8),
-                                  Pill(level: '보통'),
-                                ],
+                              Container(
+                                margin: EdgeInsets.only(
+                                  left: idx == 0 ? 0 : 6,
+                                  right: idx == 2 ? 0 : 6,
+                                ),
+                                padding: const EdgeInsets.fromLTRB(10, 16, 10, 16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: AppColors.border),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const SizedBox(height: 8),
+                                    Text(m['icon']!, style: const TextStyle(fontSize: 32)),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      m['title']!,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textMain),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(m['point']!, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                                    const SizedBox(height: 12),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton(
+                                        onPressed: () => Navigator.pushNamed(context, m['route']!),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColors.primary,
+                                          foregroundColor: Colors.white,
+                                          elevation: 0,
+                                          minimumSize: const Size(0, 38),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          padding: EdgeInsets.zero,
+                                        ),
+                                        child: const Text('시작', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              const SizedBox(height: 5),
-                              const Text('시뮬레이션', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                              Positioned(
+                                top: 8,
+                                right: idx == 2 ? 8 : 14,
+                                child: Pill(level: m['level']!),
+                              ),
                             ],
                           ),
-                          ElevatedButton(
-                            onPressed: () => Navigator.pushNamed(context, '/restaurant_kiosk'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              minimumSize: const Size(0, 46),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                            ),
-                            child: const Text('시작하기', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-                          ),
-                        ],
-                      ),
+                        );
+                      }).toList(),
                     ),
                   ],
                 ),

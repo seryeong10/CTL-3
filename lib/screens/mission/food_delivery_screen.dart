@@ -49,26 +49,42 @@ class _FoodDeliveryScreenState extends State<FoodDeliveryScreen> {
   final storeIcons = {'우리분식': '🍜', '동네치킨': '🍗', '행복피자': '🍕'};
   final reqOpts = ['일회용 수저 주세요', '맵지 않게 해주세요', '문 앞에 놓아주세요', '직접 입력'];
 
-  void addToCart() {
+  void addToCart({bool skipOptions = false}) {
     if (selMenu == null) return;
-    final optsList = storeOpts[store] as List<Map<String, dynamic>>;
     int extra = 0;
     
-    for (var g in optsList) {
-      final selectedOpt = opts[g['label'] as String];
-      final options = g['options'] as List<Map<String, dynamic>>;
-      final optDef = options.firstWhere((o) => o['name'] == selectedOpt, orElse: () => {'price': 0});
-      extra += optDef['price'] as int;
+    if (!skipOptions) {
+      final optsList = storeOpts[store] ?? [];
+      for (var g in optsList) {
+        final selectedOpt = opts[g['label'] as String];
+        final options = g['options'] as List;
+        int p = 0;
+        for (var o in options) {
+          if ((o as Map)['name'] == selectedOpt) {
+            p = (o['price'] as num).toInt();
+            break;
+          }
+        }
+        extra += p;
+      }
     }
 
-    final metaStr = opts.values.join(' · ');
+    final metaStr = skipOptions ? '' : opts.values.where((v) => v.isNotEmpty).join(' · ');
+    
     setState(() {
-      cart.add({
-        'name': selMenu!['name'],
-        'price': (selMenu!['price'] as int) + extra,
-        'qty': 1,
-        'meta': metaStr.isEmpty ? null : metaStr,
-      });
+      final metaToSave = metaStr.isEmpty ? null : metaStr;
+      final existingIdx = cart.indexWhere((item) => item['name'] == selMenu!['name'] && item['meta'] == metaToSave);
+      
+      if (existingIdx != -1) {
+        cart[existingIdx]['qty'] = (cart[existingIdx]['qty'] as int) + 1;
+      } else {
+        cart.add({
+          'name': selMenu!['name'],
+          'price': (selMenu!['price'] as int) + extra,
+          'qty': 1,
+          'meta': metaToSave,
+        });
+      }
       opts.clear();
       selMenu = null;
       step = 'cart';
@@ -110,6 +126,36 @@ class _FoodDeliveryScreenState extends State<FoodDeliveryScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(title: '배달 음식 주문하기', onBack: backFn),
+      bottomNavigationBar: step == 'menu'
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                child: SizedBox(
+                  height: 60,
+                  child: ElevatedButton(
+                    onPressed: () => setState(() => step = 'cart'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.shopping_cart, size: 22),
+                        const SizedBox(width: 10),
+                        Text(
+                          cart.isNotEmpty ? '장바구니 보기  (${cart.length}개)' : '장바구니 보기',
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -141,23 +187,7 @@ class _FoodDeliveryScreenState extends State<FoodDeliveryScreen> {
             ],
 
             if (step == 'menu') ...[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(store, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textMain)),
-                  ElevatedButton(
-                    onPressed: () => setState(() => step = 'cart'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                    ),
-                    child: Text('장바구니${cart.isNotEmpty ? ' (${cart.length})' : ''}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-                  ),
-                ],
-              ),
+              Text(store, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textMain)),
               const SizedBox(height: 16),
               ...(storeMenus[store] ?? []).map((m) => CustomCard(
                 margin: const EdgeInsets.only(bottom: 10),
@@ -188,7 +218,17 @@ class _FoodDeliveryScreenState extends State<FoodDeliveryScreen> {
                       ],
                     ),
                     ElevatedButton(
-                      onPressed: () => setState(() { selMenu = m; opts.clear(); step = 'option'; }),
+                      onPressed: () {
+                        setState(() {
+                          selMenu = m;
+                          opts.clear();
+                          if (['음료', '음료수', '치즈볼'].contains(m['name'])) {
+                            addToCart(skipOptions: true);
+                          } else {
+                            step = 'option';
+                          }
+                        });
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
@@ -276,7 +316,7 @@ class _FoodDeliveryScreenState extends State<FoodDeliveryScreen> {
                 children: [
                   Expanded(child: PrimaryButton(text: '더 담기', onPressed: () => setState(() => step = 'menu'), variant: ButtonVariant.outline)),
                   const SizedBox(width: 12),
-                  Expanded(child: PrimaryButton(text: '배달 주소', disabled: cart.isEmpty, onPressed: () => setState(() => step = 'address'))),
+                  Expanded(child: PrimaryButton(text: '주문하기', disabled: cart.isEmpty, onPressed: () => setState(() => step = 'address'))),
                 ],
               ),
             ],

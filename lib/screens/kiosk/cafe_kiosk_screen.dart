@@ -84,6 +84,36 @@ class _CafeKioskScreenState extends State<CafeKioskScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(title: '카페 키오스크', onBack: backFn),
+      bottomNavigationBar: step == 'menu'
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                child: SizedBox(
+                  height: 60,
+                  child: ElevatedButton(
+                    onPressed: () => setState(() => step = 'cart'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.shopping_cart, size: 22),
+                        const SizedBox(width: 10),
+                        Text(
+                          cartCount > 0 ? '장바구니 보기  ($cartCount개)' : '장바구니 보기',
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -112,26 +142,7 @@ class _CafeKioskScreenState extends State<CafeKioskScreen> {
             ],
             
             if (step == 'menu') ...[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('$storeType 주문', style: const TextStyle(fontSize: 15, color: AppColors.textSecondary)),
-                  ElevatedButton(
-                    onPressed: () => setState(() => step = 'cart'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                    ),
-                    child: Text(
-                      '장바구니${cartCount > 0 ? ' ($cartCount)' : ''}',
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
-              ),
+              Text('$storeType 주문', style: const TextStyle(fontSize: 15, color: AppColors.textSecondary)),
               const SizedBox(height: 16),
               ...menus.map((m) => _buildMenuItem(m)),
             ],

@@ -20,12 +20,16 @@ class _TrainTicketScreenState extends State<TrainTicketScreen> {
   String train = '';
   List<String> seats = [];
   bool done = false;
+  DateTime _calDate = DateTime.now();
+  String _calMode = 'day';
 
   final stations = ['서울', '대전', '청주', '부산', '광주'];
   final trains = [
     {'id': 't1', 'dep': '09:00', 'arr': '10:30'},
     {'id': 't2', 'dep': '11:00', 'arr': '12:30'},
     {'id': 't3', 'dep': '14:00', 'arr': '15:30'},
+    {'id': 't4', 'dep': '17:00', 'arr': '18:30'},
+    {'id': 't5', 'dep': '19:30', 'arr': '21:00'},
   ];
   final rows = ['A', 'B', 'C', 'D', 'E'];
   final cols = [1, 2, 3, 4];
@@ -99,7 +103,14 @@ class _TrainTicketScreenState extends State<TrainTicketScreen> {
             if (step == 'date') ...[
               const Text('날짜를 선택해주세요', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textMain)),
               const SizedBox(height: 16),
-              ...['오늘 (7/8)', '내일 (7/9)', '7월 10일', '7월 11일', '7월 12일'].map((d) => _buildBtn('📅  $d', date == d, () => setState(() { date = d; step = 'train'; }))),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: _buildCalendar(),
+              ),
             ],
 
             if (step == 'train') ...[
@@ -232,5 +243,131 @@ class _TrainTicketScreenState extends State<TrainTicketScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildCalendar() {
+    if (_calMode == 'year') {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3, childAspectRatio: 2, crossAxisSpacing: 10, mainAxisSpacing: 10
+          ),
+          itemCount: 6,
+          itemBuilder: (context, i) {
+            final y = DateTime.now().year + i;
+            return InkWell(
+              onTap: () => setState(() { _calDate = DateTime(y, _calDate.month, 1); _calMode = 'month'; }),
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                decoration: BoxDecoration(border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(10)),
+                alignment: Alignment.center,
+                child: Text('$y년', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              ),
+            );
+          }
+        ),
+      );
+    } else if (_calMode == 'month') {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4, childAspectRatio: 1.5, crossAxisSpacing: 10, mainAxisSpacing: 10
+          ),
+          itemCount: 12,
+          itemBuilder: (context, i) {
+            final m = i + 1;
+            return InkWell(
+              onTap: () => setState(() { _calDate = DateTime(_calDate.year, m, 1); _calMode = 'day'; }),
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                decoration: BoxDecoration(border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(10)),
+                alignment: Alignment.center,
+                child: Text('$m월', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              ),
+            );
+          }
+        ),
+      );
+    } else {
+      final firstDay = DateTime(_calDate.year, _calDate.month, 1);
+      final daysInMonth = DateTime(_calDate.year, _calDate.month + 1, 0).day;
+      final startingWeekday = firstDay.weekday % 7; // 0 for Sunday
+      
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left),
+                  onPressed: () => setState(() { _calDate = DateTime(_calDate.year, _calDate.month - 1, 1); }),
+                ),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => setState(() => _calMode = 'year'),
+                      child: Text('${_calDate.year}년 ', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                    ),
+                    GestureDetector(
+                      onTap: () => setState(() => _calMode = 'month'),
+                      child: Text('${_calDate.month}월', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                    ),
+                  ]
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right),
+                  onPressed: () => setState(() { _calDate = DateTime(_calDate.year, _calDate.month + 1, 1); }),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: ['일', '월', '화', '수', '목', '금', '토'].map((d) => Text(d, style: TextStyle(color: d == '일' ? Colors.red : d == '토' ? Colors.blue : AppColors.textSecondary, fontWeight: FontWeight.w600))).toList(),
+            ),
+            const SizedBox(height: 10),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 7, childAspectRatio: 1
+              ),
+              itemCount: startingWeekday + daysInMonth,
+              itemBuilder: (context, i) {
+                if (i < startingWeekday) return const SizedBox();
+                final day = i - startingWeekday + 1;
+                final isToday = _calDate.year == DateTime.now().year && _calDate.month == DateTime.now().month && day == DateTime.now().day;
+                
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      date = '${_calDate.month}월 $day일';
+                      step = 'train';
+                    });
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: isToday ? AppColors.primary : Colors.transparent,
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text('$day', style: TextStyle(fontSize: 15, color: isToday ? Colors.white : AppColors.textMain, fontWeight: isToday ? FontWeight.bold : FontWeight.normal)),
+                  ),
+                );
+              }
+            ),
+          ],
+        ),
+      );
+    }
   }
 }

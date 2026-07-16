@@ -53,28 +53,20 @@ class _MapScreenState extends State<MapScreen> {
             
             // Map placeholder
             Container(
-              height: 200,
+              height: 220,
               margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
                 color: const Color(0xFFE8F0E8),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: AppColors.border),
+                image: const DecorationImage(
+                  image: NetworkImage('map_bg.png'),
+                  fit: BoxFit.cover,
+                  opacity: 0.8,
+                ),
               ),
               child: Stack(
                 children: [
-                  // Grid background
-                  Positioned.fill(
-                    child: GridPaper(
-                      color: const Color(0xFFD1E8D1),
-                      divisions: 1,
-                      subdivisions: 1,
-                      interval: 28,
-                    ),
-                  ),
-                  // Roads
-                  Center(child: Container(height: 3, color: const Color(0xFFC8D8C8))),
-                  Positioned(left: 120, top: 0, bottom: 0, child: Container(width: 3, color: const Color(0xFFC8D8C8))),
-                  
                   // Pins
                   ...stores.map((s) {
                     final align = s['pin'] as Alignment;
