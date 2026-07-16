@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/logo_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -38,13 +39,19 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    '배움페이',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
-                    ),
+                  Row(
+                    children: [
+                      const BaeumPayLogo(size: 32),
+                      const SizedBox(width: 8),
+                      const Text(
+                        '배움페이',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),

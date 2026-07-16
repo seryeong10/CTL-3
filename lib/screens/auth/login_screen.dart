@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/logo_widget.dart';
 import '../../services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -29,17 +30,8 @@ class _LoginScreenState extends State<LoginScreen> {
               // Logo
               Column(
                 children: [
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    alignment: Alignment.center,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    child: const Text('📱', style: TextStyle(fontSize: 36)),
-                  ),
+                  const BaeumPayLogo(size: 80),
+                  const SizedBox(height: 14),
                   const Text(
                     '배움페이',
                     style: TextStyle(
