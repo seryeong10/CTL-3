@@ -4,6 +4,7 @@ import '../../widgets/custom_app_bar.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/overlay_widgets.dart';
+import '../../widgets/bounceable.dart';
 
 class MovieTicketScreen extends StatefulWidget {
   const MovieTicketScreen({super.key});
@@ -91,7 +92,7 @@ class _MovieTicketScreenState extends State<MovieTicketScreen> {
             if (step == 'movie') ...[
               const Text('영화를 선택해주세요', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textMain)),
               const SizedBox(height: 16),
-              ...['별빛 여행', '우리들의 봄', '행복한 하루'].map((m) => GestureDetector(
+              ...['별빛 여행', '우리들의 봄', '행복한 하루'].map((m) => Bounceable(
                 onTap: () => setState(() { movie = m; step = 'datetime'; }),
                 child: Container(
                   height: 80,
@@ -113,7 +114,7 @@ class _MovieTicketScreenState extends State<MovieTicketScreen> {
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
-                  children: dates.map((d) => GestureDetector(
+                  children: dates.map((d) => Bounceable(
                     onTap: () => setState(() => selDate = d['d']!),
                     child: Container(
                       width: 52,
@@ -146,7 +147,7 @@ class _MovieTicketScreenState extends State<MovieTicketScreen> {
                   children: [
                     Text(h['hall'] as String, style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 8),
-                    ...(h['times'] as List<String>).map((t) => GestureDetector(
+                    ...(h['times'] as List<String>).map((t) => Bounceable(
                       onTap: () => setState(() { selTime = t; selHall = h['hall'] as String; }),
                       child: Container(
                         width: double.infinity,
@@ -206,7 +207,7 @@ class _MovieTicketScreenState extends State<MovieTicketScreen> {
                   final tk = taken.contains(s);
                   final sel = seats.contains(s);
                   
-                  return GestureDetector(
+                  return Bounceable(
                     onTap: tk ? null : () => toggleSeat(s),
                     child: Container(
                       decoration: BoxDecoration(

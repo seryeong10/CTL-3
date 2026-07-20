@@ -4,6 +4,7 @@ import '../../widgets/custom_app_bar.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/overlay_widgets.dart';
+import '../../widgets/bounceable.dart';
 
 class RestKioskScreen extends StatefulWidget {
   const RestKioskScreen({super.key});
@@ -98,26 +99,32 @@ class _RestKioskScreenState extends State<RestKioskScreen> {
           ? SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-                child: SizedBox(
-                  height: 60,
-                  child: ElevatedButton(
-                    onPressed: () => setState(() => step = 'cart'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.shopping_cart, size: 22),
-                        const SizedBox(width: 10),
-                        Text(
-                          cartCount > 0 ? '장바구니 보기  ($cartCount개)' : '장바구니 보기',
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                child: Bounceable(
+                  onTap: () => setState(() => step = 'cart'),
+                  child: IgnorePointer(
+                    ignoring: true,
+                    child: SizedBox(
+                      height: 60,
+                      child: ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
-                      ],
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.shopping_cart, size: 22),
+                            const SizedBox(width: 10),
+                            Text(
+                              cartCount > 0 ? '장바구니 보기  ($cartCount개)' : '장바구니 보기',
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -172,16 +179,22 @@ class _RestKioskScreenState extends State<RestKioskScreen> {
                         ),
                       ],
                     ),
-                    ElevatedButton(
-                      onPressed: () => setState(() { selMenu = m; step = 'type'; }),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    Bounceable(
+                      onTap: () => setState(() { selMenu = m; step = 'type'; }),
+                      child: IgnorePointer(
+                        ignoring: true,
+                        child: ElevatedButton(
+                          onPressed: () {},
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          ),
+                          child: const Text('선택', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                        ),
                       ),
-                      child: const Text('선택', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                     ),
                   ],
                 ),
@@ -247,7 +260,7 @@ class _RestKioskScreenState extends State<RestKioskScreen> {
   }
 
   Widget _buildBoxBtn(String icon, String label, VoidCallback onTap) {
-    return GestureDetector(
+    return Bounceable(
       onTap: onTap,
       child: Container(
         height: 168,
@@ -262,7 +275,7 @@ class _RestKioskScreenState extends State<RestKioskScreen> {
   }
 
   Widget _buildTypeBtn(String label, String sub, String icon, VoidCallback onTap) {
-    return GestureDetector(
+    return Bounceable(
       onTap: onTap,
       child: Container(
         height: 148,
@@ -278,7 +291,7 @@ class _RestKioskScreenState extends State<RestKioskScreen> {
   }
 
   Widget _buildSelectBtn(String label, bool isSelected, VoidCallback onTap) {
-    return GestureDetector(
+    return Bounceable(
       onTap: onTap,
       child: Container(
         width: double.infinity,
@@ -313,7 +326,7 @@ class _RestKioskScreenState extends State<RestKioskScreen> {
           ),
           QuantityControl(count: item['qty'] as int, onDecrement: () => chQ(idx, -1), onIncrement: () => chQ(idx, 1)),
           const SizedBox(width: 8),
-          GestureDetector(
+          Bounceable(
             onTap: () => rm(idx),
             child: Container(width: 32, height: 32, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: AppColors.border)), child: const Icon(Icons.close, size: 15, color: AppColors.textSecondary)),
           ),

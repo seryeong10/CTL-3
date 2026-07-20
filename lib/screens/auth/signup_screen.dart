@@ -127,10 +127,12 @@ class _SignupScreenState extends State<SignupScreen> {
                 final name = formData['name'] ?? '';
                 final dob = formData['dob'] ?? '';
                 final phone = formData['phone'] ?? '';
+                final loginId = formData['id'] ?? '';
+                final pw = formData['pw'] ?? '';
 
-                if (name.isEmpty || phone.isEmpty) {
+                if (name.isEmpty || phone.isEmpty || loginId.isEmpty || pw.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('이름과 전화번호는 필수 입력 항목입니다.')),
+                    const SnackBar(content: Text('모든 항목을 입력해 주세요.')),
                   );
                   return;
                 }
@@ -150,6 +152,8 @@ class _SignupScreenState extends State<SignupScreen> {
                   phone: phone,
                   birthYear: birthYear,
                   userType: 'senior', // 기본값으로 senior 지정
+                  id: loginId,
+                  pw: pw,
                 );
 
                 if (result != null) {

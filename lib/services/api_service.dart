@@ -1,14 +1,26 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
   // 백엔드 기본 URL (로컬 uvicorn 서버 구동 주소)
   // 에뮬레이터에서 실행할 경우 'http://10.0.2.2:8000' 등으로 조정이 필요할 수 있습니다.
-  static String baseUrl = 'http://localhost:8000';
+  static String baseUrl = kIsWeb
+      ? 'http://localhost:8000'
+      : (defaultTargetPlatform == TargetPlatform.android
+          ? 'http://10.0.2.2:8000'
+          : 'http://localhost:8000');
 
   // 현재 로그인된 사용자의 ID와 사용자 유형 (메모리 보관)
   static int? currentUserId;
   static String? currentUserType;
+  static String? currentUserName;
+  static String? currentUserPhone;
+  static int? currentUserBirthYear;
+  static String? currentUserLoginId;
+
+  // 가장 최근 발생한 에러 메시지 저장용
+  static String? lastError;
 
   // 공통 헤더 설정 (X-User-Id 헤더를 통해 백엔드에서 사용자 매핑 지원)
   static Map<String, String> _headers() {
@@ -31,8 +43,11 @@ class ApiService {
     required String phone,
     required int birthYear,
     required String userType, // senior, guardian, merchant, admin
+    required String id,
+    required String pw,
   }) async {
     try {
+      lastError = null;
       final response = await http.post(
         Uri.parse('$baseUrl/users/'),
         headers: _headers(),
@@ -41,6 +56,8 @@ class ApiService {
           'phone': phone,
           'birth_year': birthYear,
           'user_type': userType,
+          'login_id': id,
+          'password': pw,
         }),
       );
 
@@ -49,18 +66,68 @@ class ApiService {
         // 가입 성공 시 자동으로 로그인 처리
         currentUserId = data['user_id'];
         currentUserType = data['user_type'];
+        currentUserName = data['name'];
+        currentUserPhone = data['phone'];
+        currentUserBirthYear = data['birth_year'];
+        currentUserLoginId = data['login_id'];
         return data;
       } else {
         print('회원가입 실패: ${response.statusCode} - ${response.body}');
+        try {
+          final errBody = jsonDecode(utf8.decode(response.bodyBytes));
+          lastError = errBody['detail'] ?? '회원가입 실패';
+        } catch (_) {
+          lastError = '회원가입 실패 (${response.statusCode})';
+        }
         return null;
       }
     } catch (e) {
       print('회원가입 통신 에러: $e');
+      lastError = '회원가입 통신 에러: $e';
       return null;
     }
   }
 
-  /// 전화번호를 이용한 로그인 시도 및 세션 갱신
+  /// 아이디/비밀번호를 이용한 로그인 시도 및 세션 갱신
+  static Future<Map<String, dynamic>?> loginWithIdPw(String id, String pw) async {
+    try {
+      lastError = null;
+      final response = await http.post(
+        Uri.parse('$baseUrl/users/login'),
+        headers: _headers(),
+        body: jsonEncode({
+          'login_id': id,
+          'password': pw,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+        currentUserId = data['user_id'];
+        currentUserType = data['user_type'];
+        currentUserName = data['name'];
+        currentUserPhone = data['phone'];
+        currentUserBirthYear = data['birth_year'];
+        currentUserLoginId = data['login_id'];
+        return data;
+      } else {
+        print('로그인 실패: ${response.statusCode} - ${response.body}');
+        try {
+          final errBody = jsonDecode(utf8.decode(response.bodyBytes));
+          lastError = errBody['detail'] ?? '로그인 실패';
+        } catch (_) {
+          lastError = '로그인 실패 (${response.statusCode})';
+        }
+        return null;
+      }
+    } catch (e) {
+      print('로그인 통신 에러: $e');
+      lastError = '통신 에러 (연결 상태나 IP를 확인해 주세요): $e';
+      return null;
+    }
+  }
+
+  /// 전화번호를 이용한 로그인 시도 및 세션 갱신 (백워드 호환용)
   static Future<Map<String, dynamic>?> loginWithPhone(String phone) async {
     try {
       final response = await http.get(
@@ -72,6 +139,10 @@ class ApiService {
         final Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
         currentUserId = data['user_id'];
         currentUserType = data['user_type'];
+        currentUserName = data['name'];
+        currentUserPhone = data['phone'];
+        currentUserBirthYear = data['birth_year'];
+        currentUserLoginId = data['login_id'];
         return data;
       } else {
         print('로그인 실패: ${response.statusCode} - ${response.body}');
@@ -87,6 +158,10 @@ class ApiService {
   static void logout() {
     currentUserId = null;
     currentUserType = null;
+    currentUserName = null;
+    currentUserPhone = null;
+    currentUserBirthYear = null;
+    currentUserLoginId = null;
   }
 
   // =========================================================================
@@ -137,6 +212,39 @@ class ApiService {
       }
     } catch (e) {
       print('미션 상세 조회 에러: $e');
+      return null;
+    }
+  }
+
+  /// 신규 미션 생성
+  static Future<Map<String, dynamic>?> createMission({
+    required String title,
+    String? description,
+    String? category,
+    String? difficulty,
+    int rewardPoint = 0,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/missions/'),
+        headers: _headers(),
+        body: jsonEncode({
+          'title': title,
+          'description': description,
+          'category': category,
+          'difficulty': difficulty,
+          'reward_point': rewardPoint,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      } else {
+        print('미션 생성 실패: ${response.statusCode} - ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('미션 생성 통신 에러: $e');
       return null;
     }
   }
@@ -236,6 +344,37 @@ class ApiService {
     } catch (e) {
       print('거래 내역 조회 에러: $e');
       return [];
+    }
+  }
+
+  /// 수동 포인트 거래 내역 생성 (타입: earn, use)
+  static Future<Map<String, dynamic>?> createPointTransaction({
+    required String type, // earn, use
+    required int amount,
+    String? description,
+    int? merchantId,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/wallets/transaction'),
+        headers: _headers(),
+        body: jsonEncode({
+          'type': type,
+          'amount': amount,
+          'description': description,
+          'merchant_id': merchantId,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      } else {
+        print('포인트 거래 실패: ${response.statusCode} - ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('포인트 거래 통신 에러: $e');
+      return null;
     }
   }
 
@@ -392,6 +531,26 @@ class ApiService {
     } catch (e) {
       print('터치 오류 전송 에러: $e');
       return null;
+    }
+  }
+
+  /// 특정 사용자의 터치 오작동 에러 로그 조회
+  static Future<List<dynamic>> getUserTouchErrorLogs(int userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/errors/user/$userId'),
+        headers: _headers(),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(utf8.decode(response.bodyBytes)) as List<dynamic>;
+      } else {
+        print('터치 오류 로그 로드 실패: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      print('터치 오류 로그 조회 에러: $e');
+      return [];
     }
   }
 }

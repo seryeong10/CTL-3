@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
+import 'bounceable.dart';
 
 class CustomCard extends StatelessWidget {
   final Widget child;
@@ -19,25 +20,21 @@ class CustomCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: margin,
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: selected ? AppColors.primary : AppColors.border,
-          width: selected ? 2.0 : 1.0,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
+    return Bounceable(
+      onTap: onTap,
+      child: Container(
+        margin: margin,
+        decoration: BoxDecoration(
+          color: AppColors.card,
           borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: padding!,
-            child: child,
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.border,
+            width: selected ? 2.0 : 1.0,
           ),
+        ),
+        child: Padding(
+          padding: padding!,
+          child: child,
         ),
       ),
     );
@@ -112,9 +109,8 @@ class QuantityControl extends StatelessWidget {
   }
 
   Widget _buildButton(IconData icon, VoidCallback onTap) {
-    return InkWell(
+    return Bounceable(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
       child: Container(
         width: 36,
         height: 36,

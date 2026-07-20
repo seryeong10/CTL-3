@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/logo_widget.dart';
+import '../../services/api_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,6 +13,103 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool attended = false;
+  int _balance = 0;
+  String _userName = '사용자';
+  int _completedMissionsCount = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _userName = ApiService.currentUserName ?? '사용자';
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final wallet = await ApiService.getMyWallet();
+      if (wallet != null) {
+        _balance = wallet['balance'] ?? 0;
+      }
+      
+      if (ApiService.currentUserId != null) {
+        final logs = await ApiService.getUserMissionLogs(ApiService.currentUserId!);
+        final today = DateTime.now();
+        int completedToday = 0;
+        for (var log in logs) {
+          if (log['status'] == '성공') {
+            final completedAtStr = log['completed_at'] as String?;
+            if (completedAtStr != null) {
+              final completedAt = DateTime.tryParse(completedAtStr);
+              if (completedAt != null &&
+                  completedAt.year == today.year &&
+                  completedAt.month == today.month &&
+                  completedAt.day == today.day) {
+                completedToday++;
+              }
+            }
+          }
+        }
+        _completedMissionsCount = completedToday;
+
+        final txs = await ApiService.getMyPointTransactions();
+        bool foundAttendanceToday = false;
+        for (var tx in txs) {
+          if (tx['type'] == 'earn' && tx['description'] == '출석 체크') {
+            final createdAtStr = tx['created_at'] as String?;
+            if (createdAtStr != null) {
+              final createdAt = DateTime.tryParse(createdAtStr);
+              if (createdAt != null &&
+                  createdAt.year == today.year &&
+                  createdAt.month == today.month &&
+                  createdAt.day == today.day) {
+                foundAttendanceToday = true;
+                break;
+              }
+            }
+          }
+        }
+        attended = foundAttendanceToday;
+      }
+    } catch (e) {
+      print('데이터 로드 실패: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _handleAttendance() async {
+    if (attended) return;
+    try {
+      final tx = await ApiService.createPointTransaction(
+        type: 'earn',
+        amount: 10,
+        description: '출석 체크',
+      );
+      if (tx != null) {
+        setState(() {
+          attended = true;
+          _balance += 10;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('출석체크 완료! 10P가 적립되었습니다.')),
+          );
+        }
+      } else {
+        throw Exception('출석체크 실패');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('출석체크 실패: $e')),
+        );
+      }
+    }
+  }
 
   final List<Map<String, dynamic>> menus = [
     {'label': '미션', 'icon': Icons.track_changes, 'route': '/mission_categories', 'color': const Color(0xFFF59E0B)},
@@ -59,9 +157,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: AppColors.primary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Text(
-                      '10,000P',
-                      style: TextStyle(
+                    child: Text(
+                      '${_balance.toString().replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (Match m) => "${m[1]},")}P',
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: AppColors.primary,
@@ -73,8 +171,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -100,9 +200,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    '안녕하세요, 홍길동님 👋',
-                                    style: TextStyle(
+                                  Text(
+                                    '안녕하세요, $_userName님 👋',
+                                    style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.w700,
                                       color: Colors.white,
@@ -128,9 +228,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                       color: Colors.white.withValues(alpha: 0.75),
                                     ),
                                   ),
-                                  const Text(
-                                    '1 / 3',
-                                    style: TextStyle(
+                                  Text(
+                                    '$_completedMissionsCount / 3',
+                                    style: const TextStyle(
                                       fontSize: 26,
                                       fontWeight: FontWeight.w800,
                                       color: Colors.white,
@@ -143,7 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(height: 20),
                           ElevatedButton(
-                            onPressed: attended ? null : () => setState(() => attended = true),
+                            onPressed: attended ? null : _handleAttendance,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: attended ? Colors.white.withValues(alpha: 0.25) : Colors.white,
                               foregroundColor: attended ? Colors.white.withValues(alpha: 0.85) : AppColors.primary,
@@ -220,9 +320,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: AppColors.primary.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Text(
-                            '0 / 3 완료',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
+                          child: Text(
+                            '$_completedMissionsCount / 3 완료',
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
                           ),
                         ),
                       ],

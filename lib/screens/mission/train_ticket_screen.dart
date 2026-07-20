@@ -4,6 +4,7 @@ import '../../widgets/custom_app_bar.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/overlay_widgets.dart';
+import '../../widgets/bounceable.dart';
 
 class TrainTicketScreen extends StatefulWidget {
   const TrainTicketScreen({super.key});
@@ -118,7 +119,7 @@ class _TrainTicketScreenState extends State<TrainTicketScreen> {
               const SizedBox(height: 4),
               Text('$dep → $arr  ·  $date', style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)),
               const SizedBox(height: 16),
-              ...trains.map((t) => GestureDetector(
+              ...trains.map((t) => Bounceable(
                 onTap: () => setState(() { train = t['id']!; step = 'seat'; }),
                 child: Container(
                   height: 80,
@@ -169,7 +170,7 @@ class _TrainTicketScreenState extends State<TrainTicketScreen> {
                   final tk = taken.contains(s);
                   final sel = seats.contains(s);
                   
-                  return GestureDetector(
+                  return Bounceable(
                     onTap: tk ? null : () => toggleSeat(s),
                     child: Container(
                       decoration: BoxDecoration(
@@ -214,7 +215,7 @@ class _TrainTicketScreenState extends State<TrainTicketScreen> {
   }
 
   Widget _buildBtn(String label, bool isSelected, VoidCallback onTap) {
-    return GestureDetector(
+    return Bounceable(
       onTap: onTap,
       child: Container(
         width: double.infinity,
@@ -258,9 +259,8 @@ class _TrainTicketScreenState extends State<TrainTicketScreen> {
           itemCount: 6,
           itemBuilder: (context, i) {
             final y = DateTime.now().year + i;
-            return InkWell(
+            return Bounceable(
               onTap: () => setState(() { _calDate = DateTime(y, _calDate.month, 1); _calMode = 'month'; }),
-              borderRadius: BorderRadius.circular(10),
               child: Container(
                 decoration: BoxDecoration(border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(10)),
                 alignment: Alignment.center,
@@ -282,9 +282,8 @@ class _TrainTicketScreenState extends State<TrainTicketScreen> {
           itemCount: 12,
           itemBuilder: (context, i) {
             final m = i + 1;
-            return InkWell(
+            return Bounceable(
               onTap: () => setState(() { _calDate = DateTime(_calDate.year, m, 1); _calMode = 'day'; }),
-              borderRadius: BorderRadius.circular(10),
               child: Container(
                 decoration: BoxDecoration(border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(10)),
                 alignment: Alignment.center,
@@ -312,11 +311,11 @@ class _TrainTicketScreenState extends State<TrainTicketScreen> {
                 ),
                 Row(
                   children: [
-                    GestureDetector(
+                    Bounceable(
                       onTap: () => setState(() => _calMode = 'year'),
                       child: Text('${_calDate.year}년 ', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                     ),
-                    GestureDetector(
+                    Bounceable(
                       onTap: () => setState(() => _calMode = 'month'),
                       child: Text('${_calDate.month}월', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                     ),
@@ -346,7 +345,7 @@ class _TrainTicketScreenState extends State<TrainTicketScreen> {
                 final day = i - startingWeekday + 1;
                 final isToday = _calDate.year == DateTime.now().year && _calDate.month == DateTime.now().month && day == DateTime.now().day;
                 
-                return GestureDetector(
+                return Bounceable(
                   onTap: () {
                     setState(() {
                       date = '${_calDate.month}월 $day일';

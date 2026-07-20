@@ -4,6 +4,7 @@ import '../../widgets/custom_app_bar.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/overlay_widgets.dart';
+import '../../widgets/bounceable.dart';
 
 class CafeKioskScreen extends StatefulWidget {
   const CafeKioskScreen({super.key});
@@ -88,26 +89,32 @@ class _CafeKioskScreenState extends State<CafeKioskScreen> {
           ? SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-                child: SizedBox(
-                  height: 60,
-                  child: ElevatedButton(
-                    onPressed: () => setState(() => step = 'cart'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.shopping_cart, size: 22),
-                        const SizedBox(width: 10),
-                        Text(
-                          cartCount > 0 ? '장바구니 보기  ($cartCount개)' : '장바구니 보기',
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                child: Bounceable(
+                  onTap: () => setState(() => step = 'cart'),
+                  child: IgnorePointer(
+                    ignoring: true,
+                    child: SizedBox(
+                      height: 60,
+                      child: ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
-                      ],
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.shopping_cart, size: 22),
+                            const SizedBox(width: 10),
+                            Text(
+                              cartCount > 0 ? '장바구니 보기  ($cartCount개)' : '장바구니 보기',
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -202,7 +209,7 @@ class _CafeKioskScreenState extends State<CafeKioskScreen> {
 
   Widget _buildStoreTypeBtn(String type, String icon) {
     return Expanded(
-      child: GestureDetector(
+      child: Bounceable(
         onTap: () => setState(() { storeType = type; step = 'menu'; }),
         child: Container(
           height: 168,
@@ -253,17 +260,23 @@ class _CafeKioskScreenState extends State<CafeKioskScreen> {
               ),
             ],
           ),
-          ElevatedButton(
-            onPressed: () => _showTempOverlay(m),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              minimumSize: const Size(0, 48),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
-              padding: const EdgeInsets.symmetric(horizontal: 22),
+          Bounceable(
+            onTap: () => _showTempOverlay(m),
+            child: IgnorePointer(
+              ignoring: true,
+              child: ElevatedButton(
+                onPressed: () {},
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  minimumSize: const Size(0, 48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+                  padding: const EdgeInsets.symmetric(horizontal: 22),
+                ),
+                child: const Text('담기', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+              ),
             ),
-            child: const Text('담기', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -307,7 +320,7 @@ class _CafeKioskScreenState extends State<CafeKioskScreen> {
 
   Widget _buildTempBtn(String label, Color bg, Color border, Color text, String val) {
     return Expanded(
-      child: GestureDetector(
+      child: Bounceable(
         onTap: () => addTemp(val),
         child: Container(
           height: 72,
@@ -348,7 +361,7 @@ class _CafeKioskScreenState extends State<CafeKioskScreen> {
             onIncrement: () => chQ(idx, 1),
           ),
           const SizedBox(width: 8),
-          GestureDetector(
+          Bounceable(
             onTap: () => rm(idx),
             child: Container(
               width: 32,

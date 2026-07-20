@@ -4,6 +4,7 @@ import '../../core/font_size_controller.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/overlay_widgets.dart';
+import '../../services/api_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -165,10 +166,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const Text('개인정보', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textMain)),
                   const SizedBox(height: 14),
                   ...[
-                    ['이름', '홍길동'],
-                    ['생년월일', '1959.03.15'],
-                    ['전화번호', '010-3587-1245'],
-                    ['아이디', 'hong01'],
+                    ['이름', ApiService.currentUserName ?? '정보 없음'],
+                    ['생년월일', ApiService.currentUserBirthYear != null ? '${ApiService.currentUserBirthYear}.01.01' : '정보 없음'],
+                    ['전화번호', ApiService.currentUserPhone ?? '정보 없음'],
+                    ['아이디', ApiService.currentUserLoginId ?? '정보 없음'],
                   ].map((r) => Container(
                     padding: const EdgeInsets.symmetric(vertical: 11),
                     decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border))),

@@ -89,15 +89,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     PrimaryButton(
                       text: '로그인',
                       onPressed: () async {
-                        if (id.isEmpty) {
+                        if (id.isEmpty || pw.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('아이디(전화번호)를 입력해 주세요.')),
+                            const SnackBar(content: Text('아이디와 비밀번호를 모두 입력해 주세요.')),
                           );
                           return;
                         }
 
-                        // 가입한 전화번호(id 필드)로 DB 조회 시도
-                        final user = await ApiService.loginWithPhone(id);
+                        // ID와 PW로 로그인 시도
+                        final user = await ApiService.loginWithIdPw(id, pw);
 
                         if (user != null) {
                           if (mounted) {
@@ -105,8 +105,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           }
                         } else {
                           if (mounted) {
+                            final errorMsg = ApiService.lastError ?? '등록되지 않은 회원 정보이거나 비밀번호가 다릅니다.';
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('등록되지 않은 회원 정보입니다. 가입 시 입력한 전화번호를 정확히 적어주세요.')),
+                              SnackBar(content: Text(errorMsg)),
                             );
                           }
                         }
@@ -140,15 +141,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     PrimaryButton(
                       text: '관리자 로그인',
                       onPressed: () async {
-                        if (id.isEmpty) {
+                        if (id.isEmpty || pw.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('관리자 아이디(전화번호)를 입력해 주세요.')),
+                            const SnackBar(content: Text('관리자 아이디와 비밀번호를 입력해 주세요.')),
                           );
                           return;
                         }
 
-                        // 가입한 전화번호로 DB 조회 시도
-                        final user = await ApiService.loginWithPhone(id);
+                        // ID와 PW로 로그인 시도
+                        final user = await ApiService.loginWithIdPw(id, pw);
 
                         if (user != null && (user['user_type'] == 'admin' || user['user_type'] == 'merchant')) {
                           if (mounted) {
@@ -156,8 +157,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           }
                         } else {
                           if (mounted) {
+                            final errorMsg = ApiService.lastError ?? '관리자 또는 점주 계정이 아니거나 등록되지 않은 회원입니다.';
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('관리자 또는 점주 계정이 아니거나 등록되지 않은 회원입니다.')),
+                              SnackBar(content: Text(errorMsg)),
                             );
                           }
                         }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/primary_button.dart';
+import '../../services/api_service.dart';
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key});
@@ -12,6 +14,138 @@ class PaymentScreen extends StatefulWidget {
 
 class _PaymentScreenState extends State<PaymentScreen> {
   bool showPopup = true;
+  int _balance = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWallet();
+  }
+
+  Future<void> _loadWallet() async {
+    try {
+      final wallet = await ApiService.getMyWallet();
+      if (wallet != null) {
+        setState(() {
+          _balance = wallet['balance'] ?? 0;
+        });
+      }
+    } catch (e) {
+      print('결제 화면 지갑 조회 에러: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _simulateBarcodePayment() async {
+    int selectedStoreId = 1;
+    String selectedStoreName = '행복카페';
+    final amountController = TextEditingController(text: '2000');
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: const Text('바코드 결제 시뮬레이션', style: TextStyle(fontWeight: FontWeight.bold)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text('결제할 매장 선택:', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                  DropdownButton<int>(
+                    value: selectedStoreId,
+                    isExpanded: true,
+                    items: const [
+                      DropdownMenuItem(value: 1, child: Text('행복카페')),
+                      DropdownMenuItem(value: 2, child: Text('우리분식')),
+                      DropdownMenuItem(value: 3, child: Text('동네마트')),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        setDialogState(() {
+                          selectedStoreId = val;
+                          selectedStoreName = val == 1 ? '행복카페' : val == 2 ? '우리분식' : '동네마트';
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 14),
+                  const Text('결제 금액 입력 (P):', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                  TextField(
+                    controller: amountController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      hintText: '금액을 입력하세요',
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('취소'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () async {
+                    final amountText = amountController.text;
+                    final amount = int.tryParse(amountText) ?? 0;
+                    if (amount <= 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('유효한 금액을 입력해 주세요.')),
+                      );
+                      return;
+                    }
+                    if (amount > _balance) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('잔액이 부족합니다.')),
+                      );
+                      return;
+                    }
+
+                    try {
+                      Navigator.pop(context); // close dialog
+                      setState(() => _isLoading = true);
+                      
+                      await ApiService.payAtMerchant(
+                        merchantId: selectedStoreId,
+                        amount: amount,
+                      );
+                      
+                      await _loadWallet(); // refresh balance
+                      
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('$selectedStoreName에서 ${amount}P 결제되었습니다.')),
+                        );
+                      }
+                    } catch (e) {
+                      setState(() => _isLoading = false);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('결제 실패: $e')),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('결제 완료'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,18 +154,23 @@ class _PaymentScreenState extends State<PaymentScreen> {
       appBar: CustomAppBar(title: '결제', onBack: () => Navigator.pop(context)),
       body: Stack(
         children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
             child: Column(
               children: [
                 CustomCard(
                   padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
                   margin: const EdgeInsets.only(bottom: 20),
                   child: Column(
-                    children: const [
-                      Text('현재 보유 포인트', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                      SizedBox(height: 6),
-                      Text('10,000P', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: AppColors.primary)),
+                    children: [
+                      const Text('현재 보유 포인트', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+                      const SizedBox(height: 6),
+                      Text(
+                        '${_balance.toString().replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (Match m) => "${m[1]},")}P',
+                        style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: AppColors.primary),
+                      ),
                     ],
                   ),
                 ),
@@ -89,6 +228,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       ),
                       const SizedBox(height: 20),
                       const Text('점원에게 보여주세요', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+                      const SizedBox(height: 14),
+                      PrimaryButton(
+                        text: '바코드 결제 시뮬레이션',
+                        onPressed: () => _simulateBarcodePayment(),
+                        variant: ButtonVariant.outline,
+                      ),
                     ],
                   ),
                 ),
